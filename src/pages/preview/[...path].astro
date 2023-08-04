@@ -1,0 +1,47 @@
+---
+export const prerender = false;
+import "@styles/index.css";
+import fetchApi from "../../lib/strapi";
+import { Debug } from "astro/components";
+import Header from "../../components/Header.astro";
+
+interface Page {
+  id: number;
+  attributes: {
+    title: string;
+    slug: string;
+    publicAt: string;
+    seo: {
+      metaTitle?: string;
+      metaDescription?: string;
+    };
+  };
+}
+
+const pages = await fetchApi<Page[]>({
+  endpoint: "pages?populate=*",
+  wrappedByKey: "data",
+});
+const { path } = Astro.params;
+const page = pages.find((page) => page.attributes.slug === path);
+// if (!page) return Astro.redirect("/404");
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Astro description" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+  </head>
+
+  <body>
+    <Header pages={pages} />
+    <link rel="stylesheet" href="/styles/index.css" />
+    <div>{page?.attributes.title}</div>
+    <div>{page?.attributes.seo.metaDescription}</div>
+    <div>{page?.attributes.seo.metaTitle}</div>
+  </body>
+</html>

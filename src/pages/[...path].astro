@@ -1,0 +1,65 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Card from "../components/Card.astro";
+import { Debug } from "astro/components";
+import "@styles/index.css";
+import fetchApi from "../lib/strapi";
+
+interface Page {
+  id: number;
+  attributes: {
+    title: string;
+    slug: string;
+    publicAt: string;
+    seo: {
+      metaTitle?: string;
+      metaDescription?: string;
+    };
+  };
+}
+
+export async function getStaticPaths() {
+  const pages = await fetchApi<Page[]>({
+    endpoint: "pages?populate=*",
+    wrappedByKey: "data",
+  });
+
+  return pages.map((page) => {
+    console.log(page);
+    return {
+      params: {
+        path:
+          page.attributes.slug === "main" ? undefined : page.attributes.slug,
+      },
+      props: page,
+    };
+  });
+}
+type Props = Page;
+const page = Astro.props;
+---
+
+<Layout
+  title={page.attributes.title}
+  metaTitle={page.attributes.seo?.metaTitle}
+  metaDescription={page.attributes.seo?.metaDescription}
+>
+  <main class="pt-[50px]">
+    <link rel="stylesheet" href="/styles/index.css" />
+    <h3 class="text-center font-bold text-4xl mb-11">
+      {page.attributes.title}
+    </h3>
+    <div>Дата создания: {page.attributes.publicAt}</div>
+  </main>
+
+  <style>
+    main {
+      margin: auto;
+      padding: 1rem;
+      width: 800px;
+      max-width: calc(100% - 2rem);
+      font-size: 20px;
+      line-height: 1.6;
+    }
+  </style>
+</Layout>
